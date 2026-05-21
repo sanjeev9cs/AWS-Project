@@ -1,0 +1,324 @@
+Form Submittion
+
+
+1️⃣ Django project बनाना
+
+👉 myproject
+
+2️⃣ App बनाना
+
+👉 accounts
+
+python3 manage.py startapp accounts
+3️⃣ Form बनाना (HTML)
+
+👉 user input लेने के लिए:
+
+Name
+Email
+Course
+4️⃣ View बनाना (MAIN LOGIC)
+
+👉 यही सबसे important part था:
+
+table.put_item({
+    'email': email,
+    'name': name,
+    'course': course
+})
+
+👉 यही AWS को data भेजता है
+
+5️⃣ AWS DynamoDB setup
+
+👉 table बनाया:
+
+student_signup
+
+👉 primary key:
+
+email
+6️⃣ IAM Role attach करना
+
+👉 EC2 को AWS access देना:
+
+AmazonDynamoDBFullAccess
+7️⃣ Server run करना
+python3 manage.py runserver 0.0.0.0:8000
+🔥 FINAL RESULT क्या होना चाहिए था
+
+👉 जब user form भरता है:
+
+✔ data AWS DynamoDB में save होता है
+✔ AWS console → Explore items में दिखता है
+✔ success page दिखता है
+
+🧠 आसान शब्दों में समझो
+
+👉 तुमने एक “online form system” बनाया
+👉 जो data directly cloud database (AWS) में save करता है
+
+🚀 One line summary
+
+👉 User form → Django → AWS (boto3) → DynamoDB → Data saved in cloud
+
+💡 तुमने क्या सीखा इस project से
+
+✔ Django basics
+✔ AWS integration
+✔ NoSQL database (DynamoDB)
+✔ IAM roles
+✔ Real cloud architecture
+
+अगर चाहो तो मैं next step में तुम्हें ये सिखा सकता हूँ:
+
+🔥 Login system
+🔥 Dashboard (saved data show करना website पर)
+🔥 CRUD operations (edit/delete data)
+🔥 Full production deployment (domain + HTTPS)
+
+बस बोल देना 👍
+
+ab mujhe steps do jisse ek hi bar me complete kru?
+
+ठीक है 👍 मैं तुम्हें end-to-end exact checklist दे रहा हूँ ताकि तुम एक ही बार में पूरा working project बना सको (Django + DynamoDB signup).
+
+बस इसी order में करो — कोई step skip मत करना।
+
+🚀 FULL WORKING STEPS (ONE SHOT GUIDE)
+🟢 STEP 1: Project setup
+cd ~
+mkdir app
+cd app
+🟢 STEP 2: Virtual environment (IMPORTANT)
+python3 -m venv env
+source env/bin/activate
+🟢 STEP 3: Django install
+pip install django boto3
+🟢 STEP 4: Project create
+django-admin startproject myproject .
+🟢 STEP 5: App create
+python3 manage.py startapp accounts
+🟢 STEP 6: settings.py edit
+INSTALLED_APPS = [
+    ...
+    'accounts',
+]
+
+ALLOWED_HOSTS = ['*']
+
+TEMPLATES = [
+    {
+        'DIRS': [BASE_DIR / 'templates'],
+    }
+]
+🟢 STEP 7: URLs setup
+myproject/urls.py
+from django.contrib import admin
+from django.urls import path, include
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('', include('accounts.urls')),
+]
+accounts/urls.py
+from django.urls import path
+from .views import signup
+
+urlpatterns = [
+    path('', signup),
+]
+🟢 STEP 8: views.py (AWS logic)
+import boto3
+from django.shortcuts import render
+from datetime import datetime
+
+dynamodb = boto3.resource('dynamodb', region_name='ap-south-1')
+table = dynamodb.Table('student_signup')
+
+def signup(request):
+    if request.method == "POST":
+        name = request.POST.get('name')
+        email = request.POST.get('email')
+        course = request.POST.get('course')
+
+        table.put_item(
+            Item={
+                'email': email,
+                'name': name,
+                'course': course,
+                'registered_at': datetime.utcnow().isoformat()
+            }
+        )
+
+        return render(request, 'success.html')
+
+    return render(request, 'signup.html')
+🟢 STEP 9: Templates बनाओ
+mkdir templates
+signup.html
+<h2>Student Signup</h2>
+
+<form method="POST">
+    {% csrf_token %}
+    <input name="name" placeholder="Name"><br><br>
+    <input name="email" placeholder="Email"><br><br>
+    <input name="course" placeholder="Course"><br><br>
+    <button type="submit">Signup</button>
+</form>
+success.html
+<h2>Signup Successful ✅</h2>
+🟢 STEP 10: AWS DynamoDB
+
+AWS Console:
+
+Table name: student_signup
+Partition key: email (String)
+Region: ap-south-1 (Mumbai)
+🟢 STEP 11: EC2 IAM Role
+
+Attach:
+
+AmazonDynamoDBFullAccess
+🟢 STEP 12: Migrations
+python3 manage.py migrate
+🟢 STEP 13: Run server
+python3 manage.py runserver 0.0.0.0:8000
+🌐 STEP 14: Open in browser
+http://EC2_PUBLIC_IP:8000
+🎯 FINAL RESULT
+
+✔ Form open होगा
+✔ Submit होगा
+✔ Data AWS DynamoDB में जाएगा
+✔ Success page दिखेगा
+
+🚨 IMPORTANT RULES (DON'T SKIP)
+
+✔ region = ap-south-1
+✔ IAM role attached
+✔ port 8000 open in security group
+✔ same AWS account
+
+🧠 ONE LINE FLOW
+Browser → Django → boto3 → AWS DynamoDB → Data stored
+👍 अगर तुम ये steps follow करोगे
+
+👉 100% working project बन जाएगा  
+
+
+
+
+
+
+
+
+question: 
+
+🚀 🔥 INTERVIEW QUESTIONS (Important)
+🟢 1. Django basics
+❓ Django क्या है?
+
+👉 Python web framework है जो web apps जल्दी बनाने में help करता है।
+
+❓ Django में project vs app क्या है?
+Project = पूरा website
+App = छोटा module (like accounts, blog)
+❓ manage.py क्या करता है?
+
+👉 Django project को control करने का command tool है:
+
+server run करना
+migrations
+apps manage करना
+🟡 2. Your project specific questions
+❓ आपने data कहाँ save किया?
+
+👉 AWS DynamoDB में
+
+❓ DynamoDB क्या है?
+
+👉 NoSQL database है (table-based but flexible)
+
+❓ SQL और NoSQL difference?
+SQL	NoSQL
+fixed table	flexible schema
+joins	no joins
+MySQL	DynamoDB
+❓ boto3 क्या है?
+
+👉 Python SDK for AWS services
+
+❓ आपने boto3 क्यों use किया?
+
+👉 Django को AWS DynamoDB से connect करने के लिए
+
+🔴 3. IMPORTANT TRICKY QUESTIONS (ERROR BASED)
+❓ Data DynamoDB में क्यों नहीं दिख सकता?
+
+👉 Common reasons:
+
+❌ wrong AWS region
+❌ IAM role missing
+❌ wrong table name
+❌ permission issue
+❌ no internet in EC2
+❓ print("DATA SAVED") क्यों misleading हो सकता है?
+
+👉 क्योंकि code print कर देता है, but AWS call fail हो सकता है
+
+❓ IAM role क्यों जरूरी है?
+
+👉 EC2 को AWS services access देने के लिए
+
+❓ ap-south-1 vs ap-south-1a?
+
+👉
+
+ap-south-1 = region
+ap-south-1a = availability zone
+❓ Django runserver production ke liye safe hai?
+
+👉 ❌ नहीं
+👉 only development server है
+
+🔵 4. AWS based questions
+❓ DynamoDB primary key क्या है?
+
+👉 unique identifier (your case: email)
+
+❓ NoSQL क्यों use किया?
+
+👉 fast + scalable + flexible structure
+
+❓ AWS region mismatch क्या problem create करता है?
+
+👉 data दिखता ही नहीं
+
+🔥 5. Scenario based questions (VERY IMPORTANT)
+❓ अगर data save नहीं हो रहा तो क्या check करोगे?
+
+👉 answer:
+
+IAM role
+region
+table name
+boto3 config
+logs
+❓ Django + AWS architecture explain करो
+User → Django → boto3 → AWS DynamoDB → Storage
+⚠️ COMMON MISTAKES (tumne almost ki thi 😄)
+❌ ap-south-1 vs ap-south-1a confuse
+❌ print success = real success समझना
+❌ AWS console refresh issue
+❌ IAM role importance ignore करना
+❌ server error logs check न करना
+🧠 FINAL INTERVIEW ANSWER (ready line)
+
+👉 अगर interviewer पूछे:
+
+“Explain your project”
+
+तो बोलो:
+
+मैंने Django का use करके एक signup system बनाया है जिसमें user data AWS DynamoDB में store होता है. मैंने boto3 library से AWS integration किया और EC2 instance पर deploy किया. IAM role के through secure access दिया गया है.
