@@ -1,0 +1,288 @@
+Assignment Submition
+
+
+
+☁️ 1. S3 Bucket banao
+
+Amazon S3
+
+Name: student-assignment-bucket-12345
+Region: ap-south-1 (Mumbai)
+🗃️ 2. DynamoDB table banao
+
+Amazon DynamoDB
+
+Table name: assignment_metadata
+Partition key: email (String)
+Region: ap-south-1
+💻 3. EC2 instance banao
+
+Amazon EC2
+
+Ubuntu 22.04
+Ports open:
+22
+5000
+IAM role attach (S3 + DynamoDB access)
+✅ STEP 2: EC2 LOGIN
+ssh -i key.pem ubuntu@EC2_PUBLIC_IP
+✅ STEP 3: INSTALL REQUIREMENTS
+sudo apt update -y
+sudo apt install -y python3 python3-flask python3-boto3
+✅ STEP 4: PROJECT FILE BANAAO
+mkdir assignment-app
+cd assignment-app
+vi app.py
+✅ STEP 5: CODE PASTE KARO (IMPORTANT)
+
+👉 BUCKET + TABLE name EXACT hona chahiye
+
+from flask import Flask, request, render_template_string
+import boto3
+from datetime import datetime
+
+app = Flask(__name__)
+
+s3 = boto3.client("s3", region_name="ap-south-1")
+dynamodb = boto3.resource("dynamodb", region_name="ap-south-1")
+
+BUCKET_NAME = "student-assignment-bucket-12345"
+TABLE_NAME = "assignment_metadata"
+
+table = dynamodb.Table(TABLE_NAME)
+
+HTML_FORM = """
+<h2>Assignment Submission Portal</h2>
+<form method="POST" enctype="multipart/form-data">
+Name:<br>
+<input type="text" name="name" required><br><br>
+
+Email:<br>
+<input type="email" name="email" required><br><br>
+
+Upload PDF:<br>
+<input type="file" name="file" accept=".pdf" required><br><br>
+
+<button type="submit">Submit</button>
+</form>
+"""
+
+@app.route("/", methods=["GET", "POST"])
+def upload():
+    if request.method == "POST":
+        name = request.form["name"]
+        email = request.form["email"]
+        file = request.files["file"]
+
+        filename = f"{email}_{int(datetime.utcnow().timestamp())}.pdf"
+
+        s3.upload_fileobj(file, BUCKET_NAME, filename)
+
+        table.put_item(
+            Item={
+                "email": email,
+                "file_name": file.filename,
+                "s3_path": f"s3://{BUCKET_NAME}/{filename}",
+                "uploaded_at": datetime.utcnow().isoformat()
+            }
+        )
+
+        return "Uploaded Successfully!"
+
+    return render_template_string(HTML_FORM)
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
+✅ STEP 6: RUN APP
+python3 app.py
+🌐 STEP 7: BROWSER OPEN
+http://EC2_PUBLIC_IP:5000   
+
+
+
+
+
+Questions 
+
+
+
+🏗️ PROJECT OVERVIEW QUESTIONS
+❓Project kya karta hai?
+
+Answer:
+Ye student assignment upload system hai jisme:
+
+Flask app EC2 pe run karta hai
+PDF files S3 me store hoti hain
+Metadata DynamoDB me save hota hai
+❓Architecture explain karo
+
+Answer:
+
+Student Browser
+↓
+Flask App on Amazon EC2
+↓
+PDF → Amazon S3
+↓
+Metadata → Amazon DynamoDB
+
+☁️ AWS QUESTIONS
+❓S3 kya hai?
+
+Answer:
+Object storage service hai jo files store karne ke liye use hoti hai.
+
+❓DynamoDB kyun use kiya?
+
+Answer:
+Fast NoSQL database hai metadata store karne ke liye:
+
+email
+filename
+upload time
+S3 path
+❓IAM Role kyun use kiya?
+
+Answer:
+Security ke liye. Access keys code me hardcode nahi ki.
+
+❓Bucket public kyun nahi kiya?
+
+Answer:
+Security purpose ke liye. Student files private rehni chahiye.
+
+❓Versioning kyun enable ki?
+
+Answer:
+Accidental overwrite/delete se recovery possible hoti hai.
+
+🐧 LINUX / EC2 QUESTIONS
+❓Port 5000 kya hai?
+
+Answer:
+Flask app ka listening port hai.
+
+❓“Port already in use” error kyun aaya?
+
+Answer:
+Purana Flask process already run ho raha tha.
+
+❓Port 5000 kaise free kiya?
+
+Answer:
+
+sudo fuser -k 5000/tcp
+
+Ya:
+
+sudo lsof -i :5000
+kill -9 PID
+❓CTRL + Z kya karta hai?
+
+Answer:
+Current process suspend/background me bhej deta hai.
+
+❓Server restart kaise kiya?
+
+Answer:
+
+python3 app.py
+❓File check kaise ki?
+
+Answer:
+
+cat app.py
+🐍 PYTHON / FLASK QUESTIONS
+❓Flask kya hai?
+
+Answer:
+Python web framework hai lightweight web apps banane ke liye.
+
+❓POST method kyun use ki?
+
+Answer:
+Form data aur file securely send karne ke liye.
+
+❓File upload kaise hua?
+
+Answer:
+
+request.files["file"]
+❓S3 upload kaise hua?
+
+Answer:
+
+s3.upload_fileobj()
+❓Duplicate submissions kaise roke?
+
+Answer:
+DynamoDB me email check kiya before insert.
+
+🚨 TROUBLESHOOTING QUESTIONS
+❓500 Internal Server Error kyun aaya?
+
+Answer:
+Backend exception ki wajah se.
+
+❓Real issue kya tha?
+
+Answer:
+DynamoDB region mismatch:
+
+table eu-north-1 me tha
+app ap-south-1 use kar raha tha
+❓ResourceNotFoundException ka meaning?
+
+Answer:
+Requested AWS resource exist nahi karta ya wrong region me hai.
+
+❓Security group me kya open kiya?
+
+Answer:
+
+22 → SSH
+5000 → Flask app access
+🔐 SECURITY QUESTIONS
+❓Hardcoded credentials kyun avoid kiye?
+
+Answer:
+Security risk avoid karne ke liye IAM Role use kiya.
+
+❓secure_filename kyun use kiya?
+
+Answer:
+Malicious filenames avoid karne ke liye.
+
+🚀 IMPROVEMENT QUESTIONS
+❓Production me kya improve karoge?
+
+Answer:
+
+Nginx
+Gunicorn
+HTTPS
+Authentication
+File size validation
+Logging
+🎯 BEST INTERVIEW LINE
+
+“I deployed a Flask-based assignment submission portal on AWS using EC2, S3, DynamoDB, and IAM roles with secure file upload handling.”
+
+🧠 MOST IMPORTANT COMMANDS (MEMORIZE)
+python3 app.py
+sudo fuser -k 5000/tcp
+cat app.py
+sudo apt install python3-flask python3-boto3
+ls
+🔥 REAL-WORLD QUESTIONS JO POOCHE JA SAKTE HAIN
+Difference between S3 and EBS?
+Why NoSQL instead of MySQL?
+Why IAM Role over access keys?
+What happens if EC2 stops?
+How would you scale this app?
+How would you secure uploads?
+
+
+
+
