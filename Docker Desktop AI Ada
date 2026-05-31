@@ -1,0 +1,108 @@
+Agar poora project Docker Desktop par chalana hai, to ye steps follow karo:
+
+Step 1: Project folder me jao
+
+Tum already ho:
+
+cd "D:\DevOps\AI Adap\AI Best\AI Ada"
+Step 2: Containers start karo
+docker compose up -d --build
+--build code ke latest changes se image rebuild karega.
+-d background me run karega.
+Step 3: Check karo sab containers up hain
+docker ps
+
+Tumhare case me already dikh raha hai:
+
+aiada-frontend-1
+aiada-backend-1
+mongodb
+
+to ye step pass hai.
+
+Step 4: Backend logs dekho
+docker compose logs -f backend
+
+Expected:
+
+MongoDB connected
+Server running on port 5000
+Step 5: Frontend open karo
+
+Browser me:
+
+http://localhost:3001
+
+Kyuki tumhare frontend container ka port:
+
+0.0.0.0:3001->80
+
+hai.
+
+Step 6: Login/Register
+
+Application me login karo.
+
+Step 7: Goal create karo
+
+Example:
+
+Learn Docker
+
+ya
+
+Learn Kubernetes
+Step 8: Learning Path Generate
+
+Button click karo.
+
+Check karo learning path aa raha hai ya nahi.
+
+Step 9: Lesson Generate
+
+Kisi topic par lesson generate karo.
+
+Check karo lesson aa raha hai ya nahi.
+
+Step 10: Quiz Generate
+
+Ab backend logs khule rakho:
+
+docker compose logs -f backend
+
+Phir Quiz Generate button dabao.
+
+Logs me kuch aisa aana chahiye:
+
+🧠 GENERATING QUIZ FOR: Docker Images
+
+🔥 RAW QUIZ RESPONSE:
+...
+Step 11: Agar quiz nahi aaye
+
+Mujhe backend log ka ye portion bhejna:
+
+🧠 GENERATING QUIZ FOR:
+
+se lekar end tak.
+
+Jab code change karo
+
+Har baar:
+
+docker compose up -d --build
+
+chalana.
+
+Ya force rebuild:
+
+docker compose down
+docker compose up -d --build
+
+Abhi tum Step 5 karo:
+
+Browser me
+
+http://localhost:3001
+
+open karo aur batao frontend khul raha hai ya nahi.
