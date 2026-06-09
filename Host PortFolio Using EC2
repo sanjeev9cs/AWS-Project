@@ -1,0 +1,34 @@
+You followed the correct steps:
+
+Created an EC2 instance
+Updated the server
+Cloned your GitHub repository of PortFolio
+
+👉 That’s perfect. Your setup is ready for deployment.
+
+✅ What you need to do next
+
+Now you just need to deploy the project.
+
+1. Build your project (Vite React app)
+cd ~/MyPortFolio
+npm install
+npm run build
+
+👉 This will create a dist/ folder (your production website files)
+
+2. Install Nginx (web server)
+sudo apt update
+sudo apt install nginx -y
+3. Deploy your website to Nginx
+sudo rm -rf /var/www/html/*
+sudo cp -r dist/* /var/www/html/
+
+Restart Nginx:
+
+sudo systemctl restart nginx
+4. Open your website in browser
+
+Use your EC2 public IP:
+
+http://13.206.141.132
